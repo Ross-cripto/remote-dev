@@ -1,0 +1,7 @@
+host = "devbox"
+mode = "compose"
+compose_file = "compose.yaml"
+
+[forwards.web]
+service = "web"
+target = 8080

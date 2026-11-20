@@ -1,0 +1,19 @@
+host = "devbox"
+mode = "node"
+
+[services.frontend]
+directory = "frontend"
+install = "none"
+environment = { BACKEND_URL = "http://backend:4000" }
+
+[services.backend]
+directory = "backend"
+install = "none"
+
+[forwards.frontend]
+service = "frontend"
+target = 3000
+
+[forwards.backend]
+service = "backend"
+target = 4000

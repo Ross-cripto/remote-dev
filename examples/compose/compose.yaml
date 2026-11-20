@@ -1,0 +1,10 @@
+services:
+  web:
+    image: python:3.13-slim
+    command: ["python", "-m", "http.server", "8080", "--bind", "0.0.0.0", "--directory", "/site"]
+    volumes:
+      - ./public:/site:ro
+    ports:
+      - target: 8080
+        protocol: tcp
+        host_ip: 127.0.0.1

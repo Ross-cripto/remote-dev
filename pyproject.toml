@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "remote-dev"
+version = "0.2.0b1"
+description = "Run Git worktrees on your own Linux server while you edit locally."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+
+[project.scripts]
+remote-dev = "remote_dev.__main__:main"
+
+[tool.setuptools]
+packages = ["remote_dev"]

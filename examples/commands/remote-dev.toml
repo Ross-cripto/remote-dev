@@ -1,0 +1,10 @@
+host = "devbox"
+mode = "commands"
+
+[services.api]
+image = "python:3.13-slim"
+command = ["python", "-u", "server.py"]
+
+[forwards.api]
+service = "api"
+target = 8000

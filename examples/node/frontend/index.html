@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Node example</title>
+  <main>
+    <h1>Node example</h1>
+    <p id="message" role="status">Waiting for the backend…</p>
+  </main>
+  <script type="module">
+    const message = document.querySelector("#message");
+    try {
+      const response = await fetch("/api/hello");
+      if (!response.ok) {
+        throw new Error(`Backend returned HTTP ${response.status}`);
+      }
+      const payload = await response.json();
+      message.textContent = payload.message;
+    } catch (error) {
+      console.error(error);
+      message.textContent = "Could not reach the backend. Refresh to try again.";
+    }
+  </script>
+</html>

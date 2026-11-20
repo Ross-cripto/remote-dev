@@ -1,0 +1,7 @@
+{
+  "name": "remote-dev-example-frontend",
+  "private": true,
+  "scripts": {
+    "dev": "node --watch server.mjs"
+  }
+}

@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   test:
-    name: ${{ matrix.os }} · Python ${{ matrix.python }}
+    name: ${{ matrix.os }} · Python beta compatibility ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
@@ -40,3 +40,31 @@ jobs:
           cd "$RUNNER_TEMP"
           remote-dev --version
           remote-dev --help
+
+  native:
+    name: ${{ matrix.os }} · Go
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5
+        with:
+          go-version: stable
+          cache-dependency-path: go.sum
+      - name: Verify formatting and test
+        run: |
+          test -z "$(gofmt -l cmd internal)"
+          go vet ./...
+          go test ./...
+      - name: Build and check the CLI
+        run: |
+          ./scripts/build-native.sh "$RUNNER_TEMP/remote-dev"
+          "$RUNNER_TEMP/remote-dev" --version

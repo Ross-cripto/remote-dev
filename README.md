@@ -10,16 +10,18 @@ Keep your editor, Git worktrees, and browser on your laptop. Run your dev server
 
 ## Quick start
 
-- **On your laptop** · macOS or Linux, Python 3.11+, Git, and OpenSSH.
-- **On your server** · Linux, SSH access, Python 3.11+, Docker Engine, and Compose v2 available to your SSH account.
+- **On your laptop** · macOS or Linux, Git, and OpenSSH.
+- **On your server** · Linux (amd64 or arm64), SSH access, Docker Engine, and Compose v2 available to your SSH account.
 
-**1. Install** from this repository with [uv](https://docs.astral.sh/uv/).
+**1. Install** from source with Go 1.26 or newer.
 
 ```sh
-uv tool install 'git+https://github.com/Ross-cripto/remote-dev.git'
+git clone https://github.com/Ross-cripto/remote-dev.git
+cd remote-dev
+./scripts/build-native.sh "$HOME/.local/bin/remote-dev"
 ```
 
-**2. Connect** using an SSH alias you already have, or pass `user@server`.
+**2. Connect** using an SSH alias you already have, or pass `user@server`. Remote Dev installs its bundled Linux helper in your SSH user's data directory.
 
 ```sh
 remote-dev connect devbox
@@ -34,6 +36,8 @@ remote-dev up
 Open the printed URL and edit a file in your local editor. The preview keeps the same URL while edits sync. Run `remote-dev` for the workspace panel, or `remote-dev stop` when you're done.
 
 New to Remote Dev? [Try the runnable example](docs/guide.md#try-the-compose-demo). If your server is missing a dependency, see [server setup](docs/guide.md#connect-and-check-a-server).
+
+Upgrading from the Python beta or Go preview? [Migrate an existing worktree](docs/migration.md).
 
 ## One preview per worktree
 
@@ -72,7 +76,7 @@ Synced on save.
 | Node.js and Compose infrastructure | Runs a recognized Node app alongside a simple Compose stack, such as Redis on the default network. |
 | Custom start commands | Uses an explicit [`remote-dev.toml` configuration](docs/guide.md#configure-a-project-explicitly). |
 
-**Beta.** Remote Dev is intended for trusted development projects on a server you control. Each sync sends a compressed snapshot, and some changes restart or rebuild a service. See [how sync works and what it copies](docs/guide.md#source-and-sync).
+**Beta.** Remote Dev is intended for trusted development projects on a server you control. After the initial snapshot, saved changes normally transfer as deltas. Some edits restart or rebuild a service. See [how sync works and what it copies](docs/guide.md#source-and-sync).
 
 ## Get involved
 

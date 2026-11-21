@@ -18,6 +18,7 @@ from typing import BinaryIO, Iterator
 LOOPBACK = "127.0.0.1"
 COMPOSE_TIMEOUT_SECONDS = 180
 LOG_LINES = 120
+DELTA_METADATA = ".remote-dev.delta.json"
 
 
 def file_digest(path: Path) -> str:
@@ -73,11 +74,10 @@ def verify_snapshot(workspace: Path, digest: str) -> Path:
     return source
 
 
-def install_snapshot(workspace: Path, digest: str, data: BinaryIO) -> None:
-    source = source_path(workspace, digest)
-    if source.parent.exists():
-        verify_snapshot(workspace, digest)
-        return
+@contextmanager
+def verified_archive(
+    source: Path, digest: str, data: BinaryIO
+) -> Iterator[tuple[tarfile.TarFile, Path]]:
     source.parent.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(
         prefix="incoming-", dir=source.parent.parent
@@ -90,29 +90,94 @@ def install_snapshot(workspace: Path, digest: str, data: BinaryIO) -> None:
             raise ValueError(
                 "Snapshot transfer failed its digest check. Retry the operation."
             )
-        staged = incoming / "snapshot"
-        staged_source = staged / "source"
-        staged_source.mkdir(parents=True)
-        staged_source.chmod(0o755)
         with tarfile.open(payload, mode="r:*") as archive:
-            for member in archive:
-                target = path_in(staged_source, member.name)
-                if not member.isfile():
-                    raise ValueError(f"Unsupported snapshot member: {member.name}")
-                target.parent.mkdir(parents=True, exist_ok=True)
-                with (
-                    archive.extractfile(member) as content,
-                    target.open("xb") as output,
-                ):
-                    shutil.copyfileobj(content, output)
-                target.chmod(0o755 if member.mode & 0o100 else 0o644)
-        for directory in staged_source.rglob("*"):
-            if directory.is_dir():
-                directory.chmod(0o755)
-        (staged / "files.json").write_text(
-            json.dumps(inventory(staged_source), sort_keys=True)
-        )
-        staged.rename(source.parent)
+            yield archive, incoming / "snapshot" / "source"
+
+
+def extract_snapshot_member(
+    archive: tarfile.TarFile, member: tarfile.TarInfo, root: Path, *, replace: bool
+) -> None:
+    target = path_in(root, member.name)
+    if not member.isfile():
+        raise ValueError(f"Unsupported snapshot member: {member.name}")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if replace:
+        target.unlink(missing_ok=True)
+    with archive.extractfile(member) as content, target.open("xb") as output:
+        shutil.copyfileobj(content, output)
+    target.chmod(0o755 if member.mode & 0o100 else 0o644)
+
+
+def publish_snapshot(staged: Path, source: Path) -> None:
+    for directory in staged.rglob("*"):
+        if directory.is_dir():
+            directory.chmod(0o755)
+    (staged.parent / "files.json").write_text(
+        json.dumps(inventory(staged), sort_keys=True)
+    )
+    staged.parent.rename(source.parent)
+
+
+def install_snapshot(workspace: Path, digest: str, data: BinaryIO) -> None:
+    source = source_path(workspace, digest)
+    if source.parent.exists():
+        verify_snapshot(workspace, digest)
+        return
+    with verified_archive(source, digest, data) as (archive, staged):
+        staged.mkdir(parents=True)
+        staged.chmod(0o755)
+        for member in archive:
+            extract_snapshot_member(archive, member, staged, replace=False)
+        publish_snapshot(staged, source)
+
+
+def delta_description(archive: tarfile.TarFile) -> tuple[str, list[str]]:
+    member = archive.next()
+    if member is None or member.name != DELTA_METADATA or not member.isfile():
+        raise ValueError("The snapshot delta is missing its manifest.")
+    with archive.extractfile(member) as content:
+        manifest = json.load(content)
+    base = manifest.get("base") if isinstance(manifest, dict) else None
+    deleted = manifest.get("deleted") if isinstance(manifest, dict) else None
+    if not isinstance(base, str) or not isinstance(deleted, list):
+        raise ValueError("Invalid snapshot delta manifest.")
+    if not all(isinstance(name, str) for name in deleted):
+        raise ValueError("Invalid snapshot delta deletions.")
+    return base, deleted
+
+
+def remove_snapshot_file(root: Path, name: str) -> None:
+    target = path_in(root, name)
+    target.unlink()
+    for parent in target.parents:
+        if parent == root or any(parent.iterdir()):
+            break
+        parent.rmdir()
+
+
+def install_delta(
+    workspace: Path, digest: str, deployed: str | None, data: BinaryIO
+) -> bool:
+    source = source_path(workspace, digest)
+    with verified_archive(source, digest, data) as (archive, staged):
+        base, deleted = delta_description(archive)
+        source_path(workspace, base)
+        if digest == deployed or base == deployed and source.parent.exists():
+            verify_snapshot(workspace, digest)
+            return True
+        if base != deployed:
+            return False
+        shutil.copytree(verify_snapshot(workspace, base), staged)
+        for name in deleted:
+            remove_snapshot_file(staged, name)
+        seen = {DELTA_METADATA}
+        while (member := archive.next()) is not None:
+            if member.name in seen:
+                raise ValueError(f"Duplicate snapshot member: {member.name}")
+            seen.add(member.name)
+            extract_snapshot_member(archive, member, staged, replace=True)
+        publish_snapshot(staged, source)
+    return True
 
 
 def run(arguments: list[str], cwd: Path | None = None, progress: bool = False) -> str:
@@ -581,7 +646,13 @@ def activate(workspace: Path, project: str, action: str, request: dict) -> dict:
         verify_snapshot(workspace, previous["digest"]) if previous else None
     )
     digest = request["digest"]
-    install_snapshot(workspace, digest, sys.stdin.buffer)
+    if request.get("delta"):
+        if not install_delta(
+            workspace, digest, previous.get("digest"), sys.stdin.buffer
+        ):
+            return {"need_full": True}
+    else:
+        install_snapshot(workspace, digest, sys.stdin.buffer)
     desired = verify_snapshot(workspace, digest)
     source_command, cwd = source_compose_command(project, desired, request)
     preview = json.loads(run([*source_command, "config", "--format", "json"], cwd))

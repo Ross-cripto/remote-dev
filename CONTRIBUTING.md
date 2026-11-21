@@ -7,14 +7,15 @@ A good first contribution is a small example that Remote Dev should detect or a 
 ```sh
 git clone https://github.com/Ross-cripto/remote-dev.git
 cd remote-dev
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -e .
-remote-dev --help
-python -m unittest discover -s tests
+go test ./...
+go vet ./...
+./scripts/build-native.sh build/remote-dev
+build/remote-dev --help
 ```
 
 The automated suite can run without your Linux server. If a change affects SSH, port forwarding, or service lifecycle, also try the [Compose demo](docs/guide.md#try-the-compose-demo) on a disposable worktree and describe what you observed.
+
+For migration compatibility, the Python beta fixtures can still be checked with `python3 -m unittest discover -s tests`.
 
 Put new examples under [examples/](examples/). Keep project discovery, Git staging, SSH identity, and service scope explicit when changing the client. Include the triggering project shape and a test or reproduction for behavioral changes.
 

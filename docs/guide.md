@@ -4,29 +4,27 @@
 
 ## Install from a checkout
 
-Use this path if you prefer the Python tools already on your machine.
+Build the bundled executable with Go 1.26 or newer. Make sure `$HOME/.local/bin` is on your PATH or choose an installation directory already on it.
 
 ```sh
 git clone https://github.com/Ross-cripto/remote-dev.git
 cd remote-dev
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install .
+./scripts/build-native.sh "$HOME/.local/bin/remote-dev"
 remote-dev --version
 ```
 
-Keep the virtual environment active when you move to the project you want to run. If a shell has another command named `remote-dev`, use `command -v remote-dev` to see which one it resolves.
+The executable includes Linux helpers for amd64 and arm64. You can choose a separate name such as `remote-dev-go` if an existing tool already uses `remote-dev`.
 
 ## Connect and check a server
 
-The client needs Git, OpenSSH, and Python 3.11+. The Linux server needs Python 3.11+, Docker Engine, and the Compose v2 plugin. Your SSH account must be able to use Docker and open SSH forwards.
+The client needs Git and OpenSSH. The Linux server needs Docker Engine and the Compose v2 plugin. Your SSH account must be able to use Docker and open SSH forwards. Remote Dev selects the correct bundled Go helper for your server, verifies its checksum and installs it in your SSH user's data directory.
 
 ```sh
 remote-dev connect devbox
 remote-dev doctor
 ```
 
-Use your existing OpenSSH alias or a target like `alex@devbox.example.com`. To select a specific identity, pass `--identity ~/.ssh/id_ed25519`. OpenSSH handles authentication and host identity verification, and the private key stays on your laptop. Remote Dev remembers a successful connection as the default.
+Use your existing OpenSSH alias or a target like `alex@devbox.example.com`. To select a specific identity, pass `--identity ~/.ssh/id_ed25519`. Use `--name devbox` to save a personal alias for a literal target. OpenSSH handles authentication and host identity verification, and the private key stays on your laptop. Remote Dev remembers a successful connection as the default.
 
 On Debian or Ubuntu, `remote-dev connect devbox --prepare` can propose installing missing prerequisites available in the server's configured APT repositories. It simulates the package operation and asks for an interactive `yes` before applying it. Installation requires the corresponding system permissions. On other distributions, use your distribution's package instructions, then rerun `remote-dev doctor`.
 
@@ -60,6 +58,7 @@ Run project commands from anywhere inside the relevant Git worktree.
 | `remote-dev logs` | Reads recent service logs. |
 | `remote-dev open` | Opens the first forwarded URL in your browser. |
 | `remote-dev stop` | Stops the selected worktree's services, watcher, and tunnel. |
+| `remote-dev migrate` | Adopts a worktree from the Python beta or refreshes the Go preview's watcher. |
 | `remote-dev list` | Lists worktrees previously used by this client. |
 | `remote-dev` | Opens a terminal panel for the current and previously used worktrees. |
 
@@ -79,7 +78,7 @@ Edit the generated file before running `up`. The [Compose](../examples/compose/r
 
 - Your local Git worktree is the source of truth. Remote Dev sends the current contents of Git-tracked and non-ignored untracked files, including uncommitted changes saved to disk. It leaves your Git index in place and omits Git metadata.
 - Standard dotenv credentials, common key filenames, and a few credential directories are excluded by name. Keep other sensitive untracked files ignored and store secrets outside tracked source. Use a trusted Linux host and trusted project code.
-- The client sends a compressed snapshot for each sync. The Linux helper applies changed files so supported development servers can reload them in place. Some code, dependency, or configuration changes require a service restart or rebuild.
+- The first start sends a compressed snapshot. Subsequent saves send edited files and deletions. If the remote base changed, the client can send a full snapshot to recover. The Linux helper verifies each payload before applying it. Some code, dependency, or configuration changes require a service restart or rebuild.
 - Write generated output to container storage or a named volume. Changing synchronized source directly on the server can cause a conflict. Source symlinks and Git submodules are unsupported in this beta.
 
 ## Troubleshooting

@@ -1,0 +1,18 @@
+name: Feature idea
+description: Explain a workflow or project layout Remote Dev could support better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What are you trying to do?
+      description: Describe your current setup and where the workflow gets stuck.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What should happen?
+      description: Include an example command or project layout if it helps explain the result.
+    validations:
+      required: true

@@ -12,6 +12,11 @@ license = "MIT"
 license-files = ["LICENSE"]
 dependencies = []
 
+[project.urls]
+Repository = "https://github.com/Ross-cripto/remote-dev"
+Documentation = "https://github.com/Ross-cripto/remote-dev/blob/main/docs/guide.md"
+Issues = "https://github.com/Ross-cripto/remote-dev/issues"
+
 [project.scripts]
 remote-dev = "remote_dev.__main__:main"
 

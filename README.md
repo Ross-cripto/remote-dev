@@ -1,79 +1,81 @@
+![Remote Dev. Edit locally. Run on your Linux box.](docs/assets/cover.jpg)
+
 # Remote Dev
 
-Keep editing in your local Git worktree. Run your development services on a Linux box you control, and open them through SSH on `localhost`. Save a file and see the new version from the same URL.
+Keep your editor, Git worktrees, and browser on your laptop. Run your dev servers on a Linux machine you control, then open them on `localhost` through SSH. Save a file and Remote Dev syncs the change to the running workspace.
 
-Each worktree uses a separate Compose project and tunnel. Remote Dev detects the development setup from the repository. An explicit configuration is available for projects with custom startup commands.
+[Quick start](#quick-start) · [Supported projects](#supported-projects) · [User guide](docs/guide.md) · [Contributing](CONTRIBUTING.md)
 
-## Install and connect
+[![Checks on Linux and macOS](https://github.com/Ross-cripto/remote-dev/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Ross-cripto/remote-dev/actions/workflows/ci.yml) [![MIT license](https://img.shields.io/badge/license-MIT-ff865b)](LICENSE)
 
-The client uses Python 3.11+, Git, and OpenSSH. The Linux host needs Python 3.11+ and a Docker Engine with the Compose plugin accessible to your SSH account.
+## Quick start
+
+- **On your laptop** · macOS or Linux, Python 3.11+, Git, and OpenSSH.
+- **On your server** · Linux, SSH access, Python 3.11+, Docker Engine, and Compose v2 available to your SSH account.
+
+**1. Install** from this repository with [uv](https://docs.astral.sh/uv/).
 
 ```sh
-git clone https://github.com/Ross-cripto/remote-dev.git
-cd remote-dev
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install .
+uv tool install 'git+https://github.com/Ross-cripto/remote-dev.git'
+```
+
+**2. Connect** using an SSH alias you already have, or pass `user@server`.
+
+```sh
 remote-dev connect devbox
 ```
 
-`devbox` can be an existing OpenSSH alias. You can also use `remote-dev connect user@server --identity ~/.ssh/id_ed25519` to reference a local key. OpenSSH handles authentication and first-use server verification. The private key stays on the client. A successful connection is saved as the default and can be reused across repositories.
-
-If host prerequisites are missing, rerun `remote-dev connect devbox --prepare`. On Debian and Ubuntu with compatible packages in the configured APT repositories, Remote Dev simulates installation and presents the package changes. Enter `yes` at the prompt to authorize them. The SSH account needs the appropriate access for installation. Run `remote-dev doctor` to check the saved server again.
-
-## Open a project
-
-Run this from a Git worktree after connecting your server.
+**3. Start** from your project's Git worktree.
 
 ```sh
 remote-dev up
 ```
 
-For a quick demo from this checkout, create a temporary Git project with the example's Compose and source files.
+Open the printed URL and edit a file in your local editor. The preview keeps the same URL while edits sync. Run `remote-dev` for the workspace panel, or `remote-dev stop` when you're done.
 
-```sh
-demo=$(mktemp -d)
-cp examples/compose/compose.yaml "$demo/"
-cp -R examples/compose/public "$demo/"
-cd "$demo"
-git init
-git add .
-remote-dev up
+New to Remote Dev? [Try the runnable example](docs/guide.md#try-the-compose-demo). If your server is missing a dependency, see [server setup](docs/guide.md#connect-and-check-a-server).
+
+## One preview per worktree
+
+![A terminal session showing remote-dev up detect compose.yaml and print a local preview URL. After saving a change locally, curl at the same URL returns the updated page.](docs/assets/session.png)
+
+<details>
+<summary>Read the terminal transcript</summary>
+
+```text
+$ remote-dev up
+Workspace running.
+compose.yaml
+web  http://127.0.0.1:57083
+Changes sync on save.
+
+$ curl -fsS http://127.0.0.1:57083/status.txt
+Hello from Linux.
+
+$ printf 'Synced on save.\n' > public/status.txt
+$ curl -fsS http://127.0.0.1:57083/status.txt
+Synced on save.
 ```
 
-Open the URL printed by `up`. Edit `public/index.html` and save it. The new content is served through the same URL. An app with a hot reload feature, such as Vite, can update the open page directly. Run `remote-dev stop` when done. Launch `remote-dev` without arguments for the terminal panel.
+</details>
 
-### Detection
+- **Start from the project you already have.** Remote Dev reads your Compose file or Node development scripts and reports what it found.
+- **Use your usual browser.** SSH forwards each preview to your laptop. Frameworks with hot reload, such as Vite, can update the open page.
+- **Run branches side by side.** Each worktree has its own Compose project and forwarded ports. Stopping one leaves the others running.
 
-| Project | What Remote Dev uses |
+## Supported projects
+
+| What you have | How Remote Dev starts it |
 | --- | --- |
-| Compose | A root Compose file and supported development overrides or profiles. Detected application ports use loopback addresses and available host ports. |
-| Node | Recognizable development scripts, package manager and lockfile. Supports common Vite, Next.js and NestJS launch commands and supported npm, pnpm and Yarn workspaces. |
-| Mixed | A recognizable Node app can run alongside a simple infrastructure-only Compose project on its default network. |
+| Docker Compose | Detects a root Compose file and supported development overrides or profiles. |
+| Node.js | Recognizes common Vite, Next.js, and NestJS development scripts and supported npm, pnpm, and Yarn project layouts. |
+| Node.js and Compose infrastructure | Runs a recognized Node app alongside a simple Compose stack, such as Redis on the default network. |
+| Custom start commands | Uses an explicit [`remote-dev.toml` configuration](docs/guide.md#configure-a-project-explicitly). |
 
-The output identifies the files used to detect your project. Projects with ambiguous application scripts, custom commands, and complex layouts can still use an explicit `remote-dev.toml`. Try `remote-dev init --host devbox --mode commands` to create a template, or inspect the [Compose](examples/compose/), [commands](examples/commands/), and [Node](examples/node/) examples. If you explicitly configure forwarded Compose ports, publish them on `127.0.0.1` on the host. Set `local = "auto"` or choose a local port in the project configuration.
+**Beta.** Remote Dev is intended for trusted development projects on a server you control. Each sync sends a compressed snapshot, and some changes restart or rebuild a service. See [how sync works and what it copies](docs/guide.md#source-and-sync).
 
-## Daily use
+## Get involved
 
-| Command | Behavior |
-| --- | --- |
-| `remote-dev connect [user@host]` | Check and remember the server |
-| `remote-dev up` | Open a workspace and sync saved changes automatically |
-| `remote-dev up --no-watch` | Open a workspace with manual synchronization |
-| `remote-dev sync` | Sync the current worktree now |
-| `remote-dev status` | Show services, tunnel URLs, and recent sync status |
-| `remote-dev logs` | Read recent service output |
-| `remote-dev stop` | Stop the selected worktree, watcher, and tunnel |
-| `remote-dev list` | List worktrees used by this client |
-| `remote-dev` | Open the terminal panel |
+Try it on a worktree and tell us where detection or setup fell short. Include your project shape and the relevant output so we can reproduce it.
 
-## Beta behavior
-
-- Saving syncs from the local worktree to the server. Ordinary edits update the running service where possible. Depending on the project's configuration, a service may instead restart or rebuild. Runtime configuration and dependency changes may recreate affected containers.
-- The client still sends a compressed snapshot when it syncs. The host applies changed files and retains the current verified revision for recovery. The laptop-side watcher runs until the workspace stops. If the tunnel drops, the watcher tries to restore it and reuses the local port when available.
-- The source includes the current bytes of Git-tracked and non-ignored untracked files. Common credential filenames are excluded. Use `.gitignore` for additional private files. Keep secrets in your existing host setup or secret manager. The local Git index stays intact, and the server receives a source tree without Git metadata.
-- Use your own trusted projects and servers because service commands run there. Store generated files in container storage or named volumes. Remote changes to managed source files are reported as conflicts. Git submodules and source symlinks are unsupported.
-
-Run focused checks with `python3 -m unittest discover -s tests`.
-
-[MIT license](LICENSE)
+[Report an issue](https://github.com/Ross-cripto/remote-dev/issues/new/choose) · [Report a security issue privately](SECURITY.md) · [MIT license](LICENSE)

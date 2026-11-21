@@ -1,0 +1,92 @@
+# Remote Dev user guide
+
+[Back to Remote Dev](../README.md)
+
+## Install from a checkout
+
+Use this path if you prefer the Python tools already on your machine.
+
+```sh
+git clone https://github.com/Ross-cripto/remote-dev.git
+cd remote-dev
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install .
+remote-dev --version
+```
+
+Keep the virtual environment active when you move to the project you want to run. If a shell has another command named `remote-dev`, use `command -v remote-dev` to see which one it resolves.
+
+## Connect and check a server
+
+The client needs Git, OpenSSH, and Python 3.11+. The Linux server needs Python 3.11+, Docker Engine, and the Compose v2 plugin. Your SSH account must be able to use Docker and open SSH forwards.
+
+```sh
+remote-dev connect devbox
+remote-dev doctor
+```
+
+Use your existing OpenSSH alias or a target like `alex@devbox.example.com`. To select a specific identity, pass `--identity ~/.ssh/id_ed25519`. OpenSSH handles authentication and host identity verification, and the private key stays on your laptop. Remote Dev remembers a successful connection as the default.
+
+On Debian or Ubuntu, `remote-dev connect devbox --prepare` can propose installing missing prerequisites available in the server's configured APT repositories. It simulates the package operation and asks for an interactive `yes` before applying it. Installation requires the corresponding system permissions. On other distributions, use your distribution's package instructions, then rerun `remote-dev doctor`.
+
+## Try the Compose demo
+
+From a [checkout of this repository](#install-from-a-checkout), after you install Remote Dev and connect a server, copy the Compose fixture into a temporary Git project.
+
+```sh
+demo=$(mktemp -d)
+cp examples/compose/compose.yaml "$demo/"
+cp -R examples/compose/public "$demo/"
+cd "$demo"
+git init
+remote-dev up
+```
+
+Open the URL printed by `up`. Edit the heading in `public/index.html`, save, and refresh the page at the same URL. The example serves static HTML. A framework with hot reload can refresh through its own development server.
+
+Run `remote-dev status` to inspect the service and `remote-dev stop` to stop the demo.
+
+## Daily commands
+
+Run project commands from anywhere inside the relevant Git worktree.
+
+| Command | What it does |
+| --- | --- |
+| `remote-dev up` | Detects or reads the setup, starts the services, opens the SSH forwards, and watches for saved changes. |
+| `remote-dev up --no-watch` | Starts the workspace with manual sync. |
+| `remote-dev sync` | Sends the current worktree source and refreshes running services where needed. |
+| `remote-dev status` | Shows container state, local URLs, and recent watcher status. |
+| `remote-dev logs` | Reads recent service logs. |
+| `remote-dev open` | Opens the first forwarded URL in your browser. |
+| `remote-dev stop` | Stops the selected worktree's services, watcher, and tunnel. |
+| `remote-dev list` | Lists worktrees previously used by this client. |
+| `remote-dev` | Opens a terminal panel for the current and previously used worktrees. |
+
+To run another branch at the same time, open its Git worktree in a second terminal and run `remote-dev up` there. Each worktree uses its own local ports and Compose project. The laptop-side watcher survives closing the terminal and runs until you stop its workspace. It tries to restore dropped tunnels and reuses the previous local port when available.
+
+## Configure a project explicitly
+
+Start with automatic detection. If your project has ambiguous development scripts, custom startup commands, or port requirements, add `remote-dev.toml` to the worktree.
+
+```sh
+remote-dev init --host devbox --mode commands
+```
+
+Edit the generated file before running `up`. The [Compose](../examples/compose/remote-dev.toml), [commands](../examples/commands/remote-dev.toml), and [Node](../examples/node/remote-dev.toml) examples show the available modes. For explicit Compose forwarding, publish the remote host ports on `127.0.0.1`. Use `local = "auto"` to let Remote Dev choose the laptop port, or name the port you want.
+
+## Source and sync
+
+- Your local Git worktree is the source of truth. Remote Dev sends the current contents of Git-tracked and non-ignored untracked files, including uncommitted changes saved to disk. It leaves your Git index in place and omits Git metadata.
+- Standard dotenv credentials, common key filenames, and a few credential directories are excluded by name. Keep other sensitive untracked files ignored and store secrets outside tracked source. Use a trusted Linux host and trusted project code.
+- The client sends a compressed snapshot for each sync. The Linux helper applies changed files so supported development servers can reload them in place. Some code, dependency, or configuration changes require a service restart or rebuild.
+- Write generated output to container storage or a named volume. Changing synchronized source directly on the server can cause a conflict. Source symlinks and Git submodules are unsupported in this beta.
+
+## Troubleshooting
+
+| What you see | What to check |
+| --- | --- |
+| SSH connects but Docker fails | Run `remote-dev doctor` and check that the same SSH account can run `docker info` and `docker compose version` on the server. |
+| The project can't be detected | Read the file or script named in the error and use [explicit configuration](#configure-a-project-explicitly) for unusual setups. |
+| A service is up but the URL fails | Check `remote-dev status` and `remote-dev logs`. The application must listen on its container interface and the forwarded port. |
+| The page doesn't update | Confirm the file is tracked or unignored, check watcher status, and try `remote-dev sync`. Refresh the browser for frameworks without hot reload. |

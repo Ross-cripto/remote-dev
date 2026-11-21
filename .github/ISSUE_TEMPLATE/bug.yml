@@ -1,0 +1,49 @@
+name: Bug report
+description: Report a failure in detection, setup, sync, forwarding, or the workspace panel.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Remove credentials, private hostnames, and identifying paths from the material you share.
+        [Report security issues privately](https://github.com/Ross-cripto/remote-dev/security/advisories/new).
+  - type: input
+    id: version
+    attributes:
+      label: Remote Dev version
+      placeholder: Output of remote-dev --version
+    validations:
+      required: true
+  - type: input
+    id: platforms
+    attributes:
+      label: Client OS and server distribution
+      placeholder: macOS and Ubuntu 24.04
+    validations:
+      required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: Project setup
+      options:
+        - Docker Compose
+        - Node.js
+        - Node.js and Compose
+        - Explicit remote-dev.toml
+        - Server setup or other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps and expected result
+      description: Include a minimal project layout or configuration when detection is involved.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Actual result
+      description: Include the relevant command output with sensitive values removed.
+    validations:
+      required: true

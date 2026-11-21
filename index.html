@@ -31,20 +31,22 @@
   </header>
 
   <main id="content">
-    <section class="hero wrap" aria-labelledby="headline">
-      <div class="hero-copy">
-        <h1 id="headline">Edit locally.<br>Run on your <span>Linux box.</span></h1>
-        <p>Give an idle Linux PC a job. Run your dev servers there over SSH and keep your editor and browser on your laptop.</p>
-        <div class="hero-actions">
-          <a class="button primary" href="#install">Install Remote Dev</a>
-          <a class="button secondary" href="#workflow">Watch the demo</a>
+    <section class="hero" aria-labelledby="headline">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <h1 id="headline">Edit locally.<br>Run on your <span>Linux box.</span></h1>
+          <p>Give an idle Linux PC a job. Run your dev servers there over SSH and keep your editor and browser on your laptop.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#install">Install Remote Dev</a>
+            <a class="button hero-demo" href="#workflow"><span class="play-mark" aria-hidden="true"></span>Watch the demo</a>
+          </div>
+          <a class="license" href="https://github.com/Ross-cripto/remote-dev/blob/main/LICENSE">Open source under the MIT license</a>
         </div>
-        <a class="license" href="https://github.com/Ross-cripto/remote-dev/blob/main/LICENSE">Open source under the MIT license</a>
       </div>
-      <figure class="hero-figure">
-        <img src="assets/workbench.webp" alt="A laptop and a fanless mini PC connected by an orange Ethernet cable." width="1402" height="1122" fetchpriority="high">
-        <figcaption><span>Your laptop</span><span class="wire" aria-hidden="true"></span><span>Your Linux PC</span></figcaption>
-      </figure>
+      <picture class="hero-media">
+        <source media="(max-width: 53rem)" srcset="assets/workbench-mobile.webp">
+        <img src="assets/workbench-hero.webp" width="1672" height="941" alt="A laptop and a small desktop PC joined by an orange Ethernet cable." fetchpriority="high">
+      </picture>
     </section>
 
     <section class="proof" id="workflow" aria-labelledby="workflow-title">

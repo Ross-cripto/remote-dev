@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Give an idle Linux PC a job. Remote Dev runs your dev servers there over SSH while your editor and browser stay on your laptop.">
+  <meta property="og:title" content="Remote Dev — Edit locally. Run on your Linux box.">
+  <meta property="og:description" content="Give an idle Linux PC a job. Run your dev servers there and open your app from your laptop.">
+  <meta property="og:image" content="https://raw.githubusercontent.com/Ross-cripto/remote-dev/main/docs/assets/social-preview.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Remote Dev — Edit locally. Run on your Linux box.</title>
+  <meta property="og:url" content="https://ross-cripto.github.io/remote-dev/">
+  <link rel="canonical" href="https://ross-cripto.github.io/remote-dev/">
+  <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="site.js"></script>
+</head>
+<body>
+  <a class="skip" href="#content">Skip to content</a>
+  <header class="site-header">
+    <nav class="wrap navigation" aria-label="Main navigation">
+      <a class="wordmark" href="./"><img src="assets/mark.svg" width="32" height="32" alt=""><span>Remote Dev</span></a>
+      <div class="nav-links">
+        <a class="desktop-link" href="#workflow">Demo</a>
+        <a href="#install">Install</a>
+        <a class="repo-link" href="https://github.com/Ross-cripto/remote-dev">GitHub</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="content">
+    <section class="hero wrap" aria-labelledby="headline">
+      <div class="hero-copy">
+        <h1 id="headline">Edit locally.<br>Run on your <span>Linux box.</span></h1>
+        <p>Give an idle Linux PC a job. Run your dev servers there over SSH and keep your editor and browser on your laptop.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#install">Install Remote Dev</a>
+          <a class="button secondary" href="#workflow">Watch the demo</a>
+        </div>
+        <a class="license" href="https://github.com/Ross-cripto/remote-dev/blob/main/LICENSE">Open source under the MIT license</a>
+      </div>
+      <figure class="hero-figure">
+        <img src="assets/workbench.webp" alt="A laptop and a fanless mini PC connected by an orange Ethernet cable." width="1402" height="1122" fetchpriority="high">
+        <figcaption><span>Your laptop</span><span class="wire" aria-hidden="true"></span><span>Your Linux PC</span></figcaption>
+      </figure>
+    </section>
+
+    <section class="proof" id="workflow" aria-labelledby="workflow-title">
+      <div class="wrap">
+        <div class="proof-copy">
+          <h2 id="workflow-title">Start on your laptop.<br>Run on Linux.</h2>
+          <p>Connect to your Linux PC once. From your project folder, run <code>remote-dev up</code> and open the address it prints in your browser.</p>
+        </div>
+        <figure class="session">
+          <video controls playsinline preload="none" poster="assets/demo-poster.webp" width="1920" height="1080" aria-label="Remote Dev launch demo" aria-describedby="demo-caption">
+            <source src="assets/remote-dev-demo.mp4" type="video/mp4">
+            <p>Open the <a href="assets/remote-dev-demo.mp4">Remote Dev launch demo</a>.</p>
+          </video>
+          <figcaption id="demo-caption">
+            <span>Remote Dev in 29 seconds</span>
+            <a href="assets/remote-dev-demo.mp4" download>Download video</a>
+          </figcaption>
+        </figure>
+        <details class="transcript">
+          <summary>Read the video description</summary>
+          <p>Dev servers and test runs can crowd a laptop. The film shows an unused Linux PC being switched on and connected. The developer runs <code>remote-dev up</code> from the laptop, then opens a sample app in its browser while the PC runs the app. Tests can run on Linux as configured Docker Compose jobs. The soundtrack is instrumental.</p>
+        </details>
+        <dl class="flow">
+          <div><dt><code>remote-dev connect devbox</code></dt><dd>Check and remember your Linux server over SSH.</dd></div>
+          <div><dt><code>remote-dev up</code></dt><dd>Start your dev services from your Git worktree.</dd></div>
+          <div><dt>Open the local URL</dt><dd>Use your laptop browser. Saved changes sync to Linux.</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="install" id="install" aria-labelledby="install-title">
+      <div class="wrap install-grid">
+        <div>
+          <h2 id="install-title">Start with the repo you already have.</h2>
+          <p>The public beta supports Docker Compose, common Node development scripts, and explicit TOML for custom start commands.</p>
+          <p>On your Linux server, have SSH access, Python 3.11+, Docker Engine, and the Compose plugin. On your computer, use Python 3.11+, Git, OpenSSH, and uv.</p>
+          <a class="text-link" href="https://github.com/Ross-cripto/remote-dev#quick-start">Read the setup guide</a>
+        </div>
+        <div class="runbook">
+          <div class="runbook-header">
+            <h3>Public beta</h3>
+            <button type="button" id="copy-command" hidden>Copy commands</button>
+          </div>
+          <pre id="install-command" tabindex="0"><code>uv tool install 'git+https://github.com/Ross-cripto/remote-dev.git'
+remote-dev connect devbox</code></pre>
+          <p class="prompt-note">Replace <code>devbox</code> with your SSH alias or <code>user@server</code>. From your project’s Git worktree, run <code>remote-dev up</code>.</p>
+          <p class="copy-feedback" id="copy-feedback" role="status"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-content">
+      <a class="wordmark" href="./"><img src="assets/mark.svg" width="32" height="32" alt=""><span>Remote Dev</span></a>
+      <div><a href="https://github.com/Ross-cripto/remote-dev">Source on GitHub</a><a href="https://github.com/Ross-cripto/remote-dev/issues/new/choose">Give feedback</a></div>
+    </div>
+  </footer>
+</body>
+</html>

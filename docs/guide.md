@@ -10,6 +10,7 @@ Build the bundled executable with Go 1.26 or newer. Make sure `$HOME/.local/bin`
 git clone https://github.com/Ross-cripto/remote-dev.git
 cd remote-dev
 ./scripts/build-native.sh "$HOME/.local/bin/remote-dev"
+export PATH="$HOME/.local/bin:$PATH"
 remote-dev --version
 ```
 

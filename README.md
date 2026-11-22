@@ -13,12 +13,13 @@ Keep your editor, Git worktrees, and browser on your laptop. Run your dev server
 - **On your laptop** · macOS or Linux, Git, and OpenSSH.
 - **On your server** · Linux (amd64 or arm64), SSH access, Docker Engine, and Compose v2 available to your SSH account.
 
-**1. Install** from source with Go 1.26 or newer.
+**1. Install** the Go release candidate from source with Go 1.26 or newer.
 
 ```sh
 git clone https://github.com/Ross-cripto/remote-dev.git
 cd remote-dev
 ./scripts/build-native.sh "$HOME/.local/bin/remote-dev"
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 **2. Connect** using an SSH alias you already have, or pass `user@server`. Remote Dev installs its bundled Linux helper in your SSH user's data directory.

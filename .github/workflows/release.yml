@@ -1,0 +1,108 @@
+name: Native release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: native-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Package ${{ matrix.platform }}
+    if: github.event.created
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: darwin-arm64
+            runner: macos-latest
+          - platform: darwin-amd64
+            runner: macos-15-intel
+          - platform: linux-amd64
+            runner: ubuntu-latest
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5
+        with:
+          go-version: stable
+          cache: false
+      - name: Build and verify the package
+        env:
+          PLATFORM: ${{ matrix.platform }}
+        run: |
+          output_directory="$RUNNER_TEMP/native-packages"
+          ./scripts/package-native.sh "$GITHUB_REF_NAME" "$output_directory"
+          archive="$output_directory/remote-dev-$GITHUB_REF_NAME-$PLATFORM.tar.gz"
+          test "$(tar -tzf "$archive" | LC_ALL=C sort)" = "$(printf 'LICENSE\nremote-dev')"
+          unpacked_directory=$(mktemp -d "$RUNNER_TEMP/remote-dev-unpacked.XXXXXX")
+          tar -xzf "$archive" -C "$unpacked_directory"
+          cmp LICENSE "$unpacked_directory/LICENSE"
+          test -x "$unpacked_directory/remote-dev"
+          test "$("$unpacked_directory/remote-dev" --version)" = "${GITHUB_REF_NAME#v}"
+          "$unpacked_directory/remote-dev" --help | grep -x 'Usage:'
+      - name: Upload the package
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: remote-dev-${{ matrix.platform }}
+          path: ${{ runner.temp }}/native-packages/
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: true
+
+  publish:
+    name: Publish release
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download the four packages
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        with:
+          pattern: remote-dev-*
+          path: ${{ runner.temp }}/native-packages
+      - name: Verify packages and assemble the release assets
+        run: |
+          release_directory="$RUNNER_TEMP/native-release"
+          mkdir "$release_directory"
+          for platform in darwin-arm64 darwin-amd64 linux-amd64 linux-arm64; do
+            package_directory="$RUNNER_TEMP/native-packages/remote-dev-$platform"
+            archive="remote-dev-$GITHUB_REF_NAME-$platform.tar.gz"
+            (
+              cd "$package_directory"
+              sha256sum "$archive" | diff - SHA256SUMS
+            )
+            cat "$package_directory/SHA256SUMS" >> "$release_directory/SHA256SUMS"
+            mv "$package_directory/$archive" "$release_directory/"
+          done
+          cd "$release_directory"
+          sha256sum --check --strict SHA256SUMS
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PRERELEASE: ${{ contains(github.ref_name, '-') }}
+        run: |
+          cd "$RUNNER_TEMP/native-release"
+          gh release create "$GITHUB_REF_NAME" --verify-tag --prerelease="$PRERELEASE" --generate-notes \
+            remote-dev-*.tar.gz SHA256SUMS

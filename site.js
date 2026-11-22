@@ -19,3 +19,23 @@ if (copyButton && command && feedback) {
     }
   });
 }
+
+const productVideo = document.querySelector("#product-video");
+const demoCover = document.querySelector("#demo-cover");
+const playbackStatus = document.querySelector("#playback-status");
+
+if (productVideo && demoCover && playbackStatus) {
+  const playDemo = demoCover.querySelector("#play-demo");
+  productVideo.controls = false;
+  demoCover.hidden = false;
+
+  playDemo.addEventListener("click", () => {
+    productVideo.controls = true;
+    demoCover.hidden = true;
+    productVideo.focus();
+
+    productVideo.play().catch(() => {
+      playbackStatus.textContent = "The demo could not start. Use the player controls or download the video.";
+    });
+  });
+}

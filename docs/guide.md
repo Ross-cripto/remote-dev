@@ -2,6 +2,29 @@
 
 [Back to Remote Dev](../README.md)
 
+## Install a release
+
+Download the archive for your client machine and `SHA256SUMS` from the same [GitHub release](https://github.com/Ross-cripto/remote-dev/releases). Use `darwin-arm64` on Apple Silicon, `darwin-amd64` on Intel Macs, `linux-amd64` on x86-64 Linux, or `linux-arm64` on ARM64 Linux.
+
+From the download directory, set `archive` to the filename you downloaded.
+
+```sh
+archive=remote-dev-v0.3.0-rc.1-darwin-arm64.tar.gz
+awk -v archive="$archive" '$2 == archive' SHA256SUMS | shasum -a 256 -c
+```
+
+On Linux, use `sha256sum -c` in place of `shasum -a 256 -c` if needed. Once verification prints `OK`, install the executable.
+
+```sh
+tar -xzf "$archive" remote-dev
+mkdir -p "$HOME/.local/bin"
+install -m 755 remote-dev "$HOME/.local/bin/remote-dev"
+export PATH="$HOME/.local/bin:$PATH"
+remote-dev --version
+```
+
+The binary includes both Linux helpers. Add the PATH line to your shell configuration to keep the command available in new terminals.
+
 ## Install from a checkout
 
 Build the bundled executable with Go 1.26 or newer. Make sure `$HOME/.local/bin` is on your PATH or choose an installation directory already on it.
@@ -54,6 +77,7 @@ Run project commands from anywhere inside the relevant Git worktree.
 | --- | --- |
 | `remote-dev up` | Detects or reads the setup, starts the services, opens the SSH forwards, and watches for saved changes. |
 | `remote-dev up --no-watch` | Starts the workspace with manual sync. |
+| `remote-dev test [--service SERVICE]` | Runs the current worktree's tests on Linux and streams the output. |
 | `remote-dev sync` | Sends the current worktree source and refreshes running services where needed. |
 | `remote-dev status` | Shows container state, local URLs, and recent watcher status. |
 | `remote-dev logs` | Reads recent service logs. |
@@ -64,6 +88,20 @@ Run project commands from anywhere inside the relevant Git worktree.
 | `remote-dev` | Opens a terminal panel for the current and previously used worktrees. |
 
 To run another branch at the same time, open its Git worktree in a second terminal and run `remote-dev up` there. Each worktree uses its own local ports and Compose project. The laptop-side watcher survives closing the terminal and runs until you stop its workspace. It tries to restore dropped tunnels and reuses the previous local port when available.
+
+## Run tests on Linux
+
+From anywhere inside your Git worktree, run:
+
+```sh
+remote-dev test
+```
+
+- **Compose** takes precedence when a Compose file is detected. Give your suite a service named `test` or `tests`, or use `remote-dev test --service integration` to choose a service by name.
+- **Node.js** uses the root `package.json` test script and detects npm, pnpm, or Yarn. Automatic Node tests set `CI=true`.
+- **Explicit configuration** can define a `test` or `tests` service in `remote-dev.toml`. In Node mode, set its `script` to your test script. An explicit `--service` selects another configured service.
+
+Each run sends the current saved files and creates a temporary Compose project with its own network and volumes. Existing previews can keep running. Test output appears as it arrives, and the command returns the test process's exit code. Press Ctrl+C to cancel the run. Compose jobs use project-scoped resources and do not publish service ports.
 
 ## Configure a project explicitly
 

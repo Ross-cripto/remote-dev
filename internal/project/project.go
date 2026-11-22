@@ -51,33 +51,44 @@ func Load(root string) (Project, error) {
 }
 
 func LoadWithHost(root, host string) (Project, error) {
+	root, filename, err := projectLocation(root, host)
+	if err != nil {
+		return Project{}, err
+	}
+	if filename == "" {
+		return detectProject(root, host)
+	}
+	return loadConfiguration(root, filename, host)
+}
+
+func projectLocation(root, host string) (string, string, error) {
 	if host != "" && !validHostOverride(host) {
-		return Project{}, errors.New("use a literal SSH host alias or user@hostname")
+		return "", "", errors.New("use a literal SSH host alias or user@hostname")
 	}
 	root, err := filepath.Abs(root)
 	if err != nil {
-		return Project{}, err
+		return "", "", err
 	}
 	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
-		return Project{}, err
+		return "", "", err
 	}
 	filename := filepath.Join(root, ConfigFile)
 	_, err = os.Lstat(filename)
 	if errors.Is(err, os.ErrNotExist) {
-		return detectProject(root, host)
+		return root, "", nil
 	}
 	if err != nil {
-		return Project{}, fmt.Errorf("read %s: %w", filename, err)
+		return "", "", fmt.Errorf("read %s: %w", filename, err)
 	}
 	info, err := os.Stat(filename)
 	if err != nil {
-		return Project{}, fmt.Errorf("read %s: %w", filename, err)
+		return "", "", fmt.Errorf("read %s: %w", filename, err)
 	}
 	if !info.Mode().IsRegular() {
-		return Project{}, fmt.Errorf("expected a regular file for %s", filename)
+		return "", "", fmt.Errorf("expected a regular file for %s", filename)
 	}
-	return loadConfiguration(root, filename, host)
+	return root, filename, nil
 }
 
 func validHostOverride(host string) bool {

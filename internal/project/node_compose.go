@@ -65,6 +65,12 @@ func detectedNodeService(root string, appPackage, installPackage nodePackage, ap
 	if len(ports) == 1 {
 		environment["PORT"] = strconv.Itoa(ports[0])
 	}
+	service := newComposeService(appPackage.Directory, nodeSource, environment, ports)
+	service.Labels = nodeLabels(watches)
+	return configureDetectedNodeService(root, appPackage, installPackage, script, arguments, service)
+}
+
+func configureDetectedNodeService(root string, appPackage, installPackage nodePackage, script string, arguments []string, service composeService) (composeService, error) {
 	manager, err := detectPackageManager(root, installPackage)
 	if err != nil {
 		return composeService{}, err
@@ -93,8 +99,6 @@ func detectedNodeService(root string, appPackage, installPackage nodePackage, ap
 	}
 	startup = append(startup, run)
 
-	service := newComposeService(appPackage.Directory, nodeSource, environment, ports)
-	service.Labels = nodeLabels(watches)
 	service.Image = image
 	service.Command = []string{"/bin/sh", "-c", escapeCompose(strings.Join(startup, " && "))}
 	service.Volumes = append(service.Volumes, composeVolume{

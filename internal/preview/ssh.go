@@ -114,10 +114,13 @@ func commandOutput(ctx context.Context, executable string, input io.Reader, argu
 	return output, nil
 }
 
-func (connection Connection) command(ctx context.Context, input io.Reader, command string, interactive bool) ([]byte, error) {
+func (connection Connection) commandOptions(command string, interactive bool) []string {
 	options := append(connection.options(interactive), "-T", "-o", "ClearAllForwardings=yes", "-o", "ControlPath=none")
-	options = append(options, "--", connection.Target, command)
-	return commandOutput(ctx, "ssh", input, options...)
+	return append(options, "--", connection.Target, command)
+}
+
+func (connection Connection) command(ctx context.Context, input io.Reader, command string, interactive bool) ([]byte, error) {
+	return commandOutput(ctx, "ssh", input, connection.commandOptions(command, interactive)...)
 }
 
 func meetsVersion(value string, requiredMajor, requiredMinor int) bool {
@@ -144,13 +147,15 @@ func (connection Connection) doctor(ctx context.Context, interactive bool) (stri
 }
 
 type hostRequest struct {
-	Digest    string            `json:"digest"`
-	Compose   string            `json:"compose_file"`
-	Override  string            `json:"compose_override,omitempty"`
-	Forwards  []project.Forward `json:"forwards"`
-	Profiles  []string          `json:"compose_profiles,omitempty"`
-	AutoPorts bool              `json:"auto_ports"`
-	Delta     bool              `json:"delta,omitempty"`
+	Digest      string            `json:"digest"`
+	Compose     string            `json:"compose_file"`
+	Override    string            `json:"compose_override,omitempty"`
+	Forwards    []project.Forward `json:"forwards"`
+	Profiles    []string          `json:"compose_profiles,omitempty"`
+	AutoPorts   bool              `json:"auto_ports"`
+	Delta       bool              `json:"delta,omitempty"`
+	TestService string            `json:"test_service,omitempty"`
+	TestBytes   int64             `json:"test_bytes,omitempty"`
 }
 
 type hostReply struct {

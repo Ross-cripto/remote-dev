@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -15,6 +16,10 @@ func main() {
 	defer cancel()
 	if err := preview.Run(ctx, os.Stdout, os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "remote-dev: %s\n", err)
+		var testExit *preview.TestExitError
+		if errors.As(err, &testExit) {
+			os.Exit(testExit.Code)
+		}
 		os.Exit(1)
 	}
 }

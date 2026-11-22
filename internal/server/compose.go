@@ -44,25 +44,37 @@ type composeSpec struct {
 }
 
 type hostCommand struct {
-	context  context.Context
-	progress io.Writer
+	context         context.Context
+	progress        io.Writer
+	ownProcessGroup bool
 }
 
 func (host hostCommand) docker(cwd string, arguments ...string) ([]byte, error) {
 	return host.execute(cwd, nil, false, arguments...)
 }
 
-func (host hostCommand) execute(cwd string, input io.Reader, live bool, arguments ...string) ([]byte, error) {
+func (host hostCommand) dockerCommand(cwd string, arguments ...string) *exec.Cmd {
 	command := exec.CommandContext(host.context, "docker", arguments...)
 	command.Dir = cwd
-	command.Stdin = input
 	command.Env = composeEnvironment()
+	if host.ownProcessGroup {
+		isolateDockerProcess(command)
+	}
+	return command
+}
+
+func (host hostCommand) execute(cwd string, input io.Reader, live bool, arguments ...string) ([]byte, error) {
+	command := host.dockerCommand(cwd, arguments...)
+	command.Stdin = input
 	var output, diagnostic bytes.Buffer
 	command.Stdout, command.Stderr = &output, &diagnostic
 	if live {
 		command.Stdout, command.Stderr = host.progress, host.progress
 	}
 	if err := command.Run(); err != nil {
+		if contextErr := host.context.Err(); host.ownProcessGroup && contextErr != nil {
+			return nil, contextErr
+		}
 		detail := strings.TrimSpace(diagnostic.String())
 		if detail == "" {
 			detail = err.Error()
@@ -138,12 +150,13 @@ func runtimeComposeCommand(workspace, project, source string) []string {
 	return []string{"compose", "--project-name", project, "--project-directory", source, "--file", filepath.Join(workspace, "runtime-compose.json")}
 }
 
-func (host hostCommand) composeConfig(project, source string, request hostRequest) (composeSpec, error) {
+func (host hostCommand) composeConfig(project, source string, request hostRequest, servicesToResolve ...string) (composeSpec, error) {
 	command, cwd, err := host.sourceCommand(project, source, request)
 	if err != nil {
 		return composeSpec{}, err
 	}
-	output, err := host.docker(cwd, append(command, "config", "--format", "json")...)
+	arguments := append(command, "config", "--format", "json")
+	output, err := host.docker(cwd, append(arguments, servicesToResolve...)...)
 	if err != nil {
 		return composeSpec{}, err
 	}

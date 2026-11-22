@@ -30,6 +30,8 @@ type hostRequest struct {
 	Forwards        []forward `json:"forwards"`
 	AutoPorts       bool      `json:"auto_ports"`
 	Delta           bool      `json:"delta"`
+	TestService     string    `json:"test_service,omitempty"`
+	TestBytes       int64     `json:"test_bytes,omitempty"`
 }
 
 type deployment struct {
@@ -80,6 +82,13 @@ func Run(ctx context.Context, args []string, stdin io.Reader, stdout, stderr io.
 	var request hostRequest
 	if err := decodeJSON(strings.NewReader(args[2]), &request); err != nil {
 		return fmt.Errorf("invalid host request: %w", err)
+	}
+	if action == "test" {
+		result, err := host.runTest(key, request, stdin)
+		if err != nil {
+			return err
+		}
+		return json.NewEncoder(stdout).Encode(result)
 	}
 	workspace, err := workspaceDirectory(key)
 	if err != nil {
@@ -147,6 +156,14 @@ func validateRequest(request hostRequest) error {
 }
 
 func workspaceDirectory(key string) (string, error) {
+	root, err := dataDirectory()
+	if err != nil {
+		return "", err
+	}
+	return workspacePath(root, "remote-dev/standalone-v1/"+key)
+}
+
+func dataDirectory() (string, error) {
 	data := os.Getenv("XDG_DATA_HOME")
 	if data == "" {
 		home, err := os.UserHomeDir()
@@ -155,11 +172,7 @@ func workspaceDirectory(key string) (string, error) {
 		}
 		data = filepath.Join(home, ".local", "share")
 	}
-	root, err := filepath.Abs(data)
-	if err != nil {
-		return "", err
-	}
-	return workspacePath(root, "remote-dev/standalone-v1/"+key)
+	return filepath.Abs(data)
 }
 
 func withWorkspaceLock(ctx context.Context, workspace string, operation func() error) error {

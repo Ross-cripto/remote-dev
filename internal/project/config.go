@@ -17,45 +17,52 @@ import (
 var environmentName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 
 func loadConfiguration(root, filename, host string) (Project, error) {
+	project, config, err := configuredProject(root, filename, host)
+	if err != nil || project.Mode == "compose" {
+		return project, err
+	}
+	generated, err := configuredServices(root, project.Mode, config["services"], project.Forwards)
+	if err != nil {
+		return Project{}, err
+	}
+	return withGenerated(project, generated)
+}
+
+func configuredProject(root, filename, host string) (Project, map[string]any, error) {
 	content, err := os.ReadFile(filename)
 	if err != nil {
-		return Project{}, fmt.Errorf("read %s: %w", filename, err)
+		return Project{}, nil, fmt.Errorf("read %s: %w", filename, err)
 	}
 	var config map[string]any
 	if err := toml.Unmarshal(content, &config); err != nil {
-		return Project{}, fmt.Errorf("read %s: %w", filename, err)
+		return Project{}, nil, fmt.Errorf("read %s: %w", filename, err)
 	}
 	if host == "" {
 		host, err = validateName(config["host"], "SSH host alias")
 		if err != nil {
-			return Project{}, err
+			return Project{}, nil, err
 		}
 	}
 	mode, err := validateMode(config["mode"])
 	if err != nil {
-		return Project{}, err
+		return Project{}, nil, err
 	}
 	modeKey := "services"
 	if mode == "compose" {
 		modeKey = "compose_file"
 	}
 	if err := validateKeys(config, ConfigFile, "host", "mode", "forwards", modeKey); err != nil {
-		return Project{}, err
+		return Project{}, nil, err
 	}
 	forwards, err := parseForwards(valueOrDefault(config, "forwards", map[string]any{}))
 	if err != nil {
-		return Project{}, err
+		return Project{}, nil, err
 	}
 	project := Project{Mode: mode, Host: host, Forwards: forwards}
 	if mode == "compose" {
 		project.ComposeFile, err = configuredComposeFile(root, config)
-		return project, err
 	}
-	generated, err := configuredServices(root, mode, config["services"], forwards)
-	if err != nil {
-		return Project{}, err
-	}
-	return withGenerated(project, generated)
+	return project, config, err
 }
 
 func configuredComposeFile(root string, config map[string]any) (string, error) {

@@ -24,6 +24,7 @@ Usage:
   remote-dev connect [--name NAME] [--identity PATH] [--prepare] [SSH_TARGET]
   remote-dev doctor [--host HOST]
   remote-dev up [--host HOST] [--no-watch]
+  remote-dev test [--host HOST] [--service SERVICE]
   remote-dev sync | status | logs | open | stop
   remote-dev migrate [--host HOST]
   remote-dev init --host HOST [--mode compose|commands|node]
@@ -177,7 +178,7 @@ func Run(ctx context.Context, writer io.Writer, arguments []string) error {
 	case "--version":
 		fmt.Fprintln(writer, version)
 		return nil
-	case "connect", "doctor", "up", "sync", "status", "logs", "open", "stop", "list", "tui", "migrate", "init", "__watch":
+	case "connect", "doctor", "up", "test", "sync", "status", "logs", "open", "stop", "list", "tui", "migrate", "init", "__watch":
 	default:
 		return fmt.Errorf("unknown command %q. Run remote-dev --help", action)
 	}
@@ -234,9 +235,12 @@ func Run(ctx context.Context, writer io.Writer, arguments []string) error {
 	host := flags.String("host", "", "SSH alias or saved connection")
 	var noWatch *bool
 	var mode *string
+	var testService *string
 	switch action {
 	case "up":
 		noWatch = flags.Bool("no-watch", false, "sync manually")
+	case "test":
+		testService = flags.String("service", "", "Compose or configured test service")
 	case "init":
 		mode = flags.String("mode", "compose", "compose, commands or node")
 	}
@@ -249,6 +253,8 @@ func Run(ctx context.Context, writer io.Writer, arguments []string) error {
 	switch action {
 	case "up":
 		return client.up(ctx, writer, root, *host, !*noWatch)
+	case "test":
+		return client.runTests(ctx, writer, root, *host, *testService)
 	case "migrate":
 		return client.migrate(ctx, writer, root, *host)
 	case "init":

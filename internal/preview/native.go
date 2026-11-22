@@ -130,6 +130,10 @@ func (connection Connection) installHelper(ctx context.Context, digest string) e
 	return nil
 }
 
+func helperCommand(digest string, arguments ...string) string {
+	return shellCommand(append([]string{"sh", "-c", runHelperScript, "remote-dev", digest}, arguments...)...)
+}
+
 func (connection Connection) invokeHelper(ctx context.Context, input io.Reader, arguments ...string) ([]byte, error) {
 	if connection.Architecture == "" {
 		facts, err := connection.probe(ctx, false)
@@ -146,7 +150,7 @@ func (connection Connection) invokeHelper(ctx context.Context, input io.Reader, 
 	if err != nil {
 		return nil, err
 	}
-	command := shellCommand(append([]string{"sh", "-c", runHelperScript, "remote-dev", digest}, arguments...)...)
+	command := helperCommand(digest, arguments...)
 	output, err := connection.command(ctx, input, command, false)
 	var exited *exec.ExitError
 	if !errors.As(err, &exited) || exited.ExitCode() != helperMissing {

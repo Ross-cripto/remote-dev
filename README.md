@@ -2,7 +2,7 @@
 
 # Remote Dev
 
-Keep your editor, Git worktrees, and browser on your laptop. Run your dev servers on a Linux machine you control, then open them on `localhost` through SSH. Save a file and Remote Dev syncs the change to the running workspace.
+Keep your editor, Git worktrees, and browser on your laptop. Run your dev servers and tests on a Linux machine you control. Open your preview on `localhost` and watch test output in your terminal over SSH.
 
 [Quick start](#quick-start) · [Supported projects](#supported-projects) · [User guide](docs/guide.md) · [Contributing](CONTRIBUTING.md)
 
@@ -13,14 +13,7 @@ Keep your editor, Git worktrees, and browser on your laptop. Run your dev server
 - **On your laptop** · macOS or Linux, Git, and OpenSSH.
 - **On your server** · Linux (amd64 or arm64), SSH access, Docker Engine, and Compose v2 available to your SSH account.
 
-**1. Install** the Go release candidate from source with Go 1.26 or newer.
-
-```sh
-git clone https://github.com/Ross-cripto/remote-dev.git
-cd remote-dev
-./scripts/build-native.sh "$HOME/.local/bin/remote-dev"
-export PATH="$HOME/.local/bin:$PATH"
-```
+**1. Install** the [Go release candidate](https://github.com/Ross-cripto/remote-dev/releases) for macOS or Linux. See the [installation guide](docs/guide.md#install-a-release) for platform names and checksum verification.
 
 **2. Connect** using an SSH alias you already have, or pass `user@server`. Remote Dev installs its bundled Linux helper in your SSH user's data directory.
 
@@ -35,6 +28,8 @@ remote-dev up
 ```
 
 Open the printed URL and edit a file in your local editor. The preview keeps the same URL while edits sync. Run `remote-dev` for the workspace panel, or `remote-dev stop` when you're done.
+
+**Run tests from the same worktree** with `remote-dev test`. Remote Dev takes a snapshot of your saved changes, streams the output from Linux, and returns the test process's exit code. It can use a Compose test service or a Node project's root `test` script. [Remote test guide](docs/guide.md#run-tests-on-linux)
 
 New to Remote Dev? [Try the runnable example](docs/guide.md#try-the-compose-demo). If your server is missing a dependency, see [server setup](docs/guide.md#connect-and-check-a-server).
 

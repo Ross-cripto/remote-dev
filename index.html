@@ -44,8 +44,8 @@
         </div>
       </div>
       <picture class="hero-media">
-        <source media="(max-width: 53rem)" srcset="assets/workbench-mobile.webp">
-        <img src="assets/workbench-hero.webp" width="1672" height="941" alt="A laptop and a small desktop PC joined by an orange Ethernet cable." fetchpriority="high">
+        <source media="(max-width: 53rem)" srcset="assets/workbench-mobile.webp?v=usb-c">
+        <img src="assets/workbench-hero.webp?v=usb-c" width="1672" height="941" alt="A laptop connected to a small desktop PC through a USB-C Ethernet adapter and an orange cable." fetchpriority="high">
       </picture>
     </section>
 
@@ -81,18 +81,20 @@
       <div class="wrap install-grid">
         <div>
           <h2 id="install-title">Start with the repo you already have.</h2>
-          <p>The public beta supports Docker Compose, common Node development scripts, and explicit TOML for custom start commands.</p>
-          <p>On your Linux server, have SSH access, Python 3.11+, Docker Engine, and the Compose plugin. On your computer, use Python 3.11+, Git, OpenSSH, and uv.</p>
+          <p>Remote Dev supports Docker Compose, common Node development scripts, and a TOML file for custom start commands.</p>
+          <p>Build the Go release candidate on macOS or Linux with Go 1.26 or newer, Git, and OpenSSH. Your Linux server needs Docker Engine and the Compose plugin.</p>
           <a class="text-link" href="https://github.com/Ross-cripto/remote-dev#quick-start">Read the setup guide</a>
         </div>
         <div class="runbook">
           <div class="runbook-header">
-            <h3>Public beta</h3>
+            <h3>Build from source</h3>
             <button type="button" id="copy-command" hidden>Copy commands</button>
           </div>
-          <pre id="install-command" tabindex="0"><code>uv tool install 'git+https://github.com/Ross-cripto/remote-dev.git'
-remote-dev connect devbox</code></pre>
-          <p class="prompt-note">Replace <code>devbox</code> with your SSH alias or <code>user@server</code>. From your project’s Git worktree, run <code>remote-dev up</code>.</p>
+          <pre id="install-command" tabindex="0"><code>git clone https://github.com/Ross-cripto/remote-dev.git
+cd remote-dev
+./scripts/build-native.sh "$HOME/.local/bin/remote-dev"
+export PATH="$HOME/.local/bin:$PATH"</code></pre>
+          <p class="prompt-note">Run <code>remote-dev connect devbox</code> with your SSH alias or <code>user@server</code>. From your project’s Git worktree, run <code>remote-dev up</code>.</p>
           <p class="copy-feedback" id="copy-feedback" role="status"></p>
         </div>
       </div>

@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
-  <meta name="description" content="Run dev servers on your Linux PC over SSH. Edit and browse from your laptop on Wi‑Fi.">
-  <meta property="og:title" content="Remote Dev — Edit locally. Run on your Linux box.">
+  <meta name="description" content="Run your dev servers on your Linux PC with Remote Dev. Edit on your laptop and open the app at a local address.">
+  <meta property="og:title" content="Remote Dev — Run dev servers on your Linux PC">
   <meta property="og:description" content="Run your dev servers on Linux and open your app from your laptop over Wi‑Fi.">
   <meta property="og:image" content="https://raw.githubusercontent.com/Ross-cripto/remote-dev/main/docs/assets/social-preview.jpg">
   <meta name="twitter:card" content="summary_large_image">
-  <title>Remote Dev — Edit locally. Run on your Linux box.</title>
+  <title>Remote Dev — Run dev servers on your Linux PC</title>
   <meta property="og:url" content="https://ross-cripto.github.io/remote-dev/">
   <link rel="canonical" href="https://ross-cripto.github.io/remote-dev/">
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
   <link rel="preload" href="assets/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="style.css?v=wifi">
+  <link rel="stylesheet" href="style.css?v=product-demo">
   <script defer src="site.js"></script>
 </head>
 <body>
@@ -23,7 +23,7 @@
     <nav class="wrap navigation" aria-label="Main navigation">
       <a class="wordmark" href="./"><img src="assets/mark.svg" width="32" height="32" alt=""><span>Remote Dev</span></a>
       <div class="nav-links">
-        <a class="desktop-link" href="#workflow">Demo</a>
+        <a class="desktop-link" href="#demo">Demo</a>
         <a href="#install">Install</a>
         <a class="repo-link" href="https://github.com/Ross-cripto/remote-dev">GitHub</a>
       </div>
@@ -34,58 +34,45 @@
     <section class="hero" aria-labelledby="headline">
       <div class="wrap hero-inner">
         <div class="hero-copy">
-          <h1 id="headline">Edit locally.<br>Run on your <span>Linux box.</span></h1>
-          <p>Run your dev servers on Linux over Wi‑Fi. Keep your editor and browser on your laptop.</p>
-          <div class="hero-actions">
-            <a class="button primary" href="#install">Install Remote Dev</a>
-            <a class="button hero-demo" href="#workflow"><span class="play-mark" aria-hidden="true"></span>Watch the demo</a>
-          </div>
-          <a class="license" href="https://github.com/Ross-cripto/remote-dev/blob/main/LICENSE">Open source under the MIT license</a>
+          <h1 id="headline">Run dev servers <span>on your Linux PC.</span></h1>
+          <p>Keep coding on your laptop. Remote Dev starts your app on Linux over SSH and gives you a local address to open in your browser.</p>
+          <a class="button primary" href="#install">Install Remote Dev</a>
         </div>
-        <figure class="hero-preview">
-          <div class="hero-scene">
-            <img class="hero-machine" src="assets/linux-pc.webp" width="640" height="664" alt="" fetchpriority="high">
-            <div class="hero-console">
-              <p class="console-title">Laptop terminal</p>
-              <div class="console-body">
-                <p class="console-command"><span aria-hidden="true">$</span> <code>remote-dev up</code></p>
-                <p class="console-result">Workspace running.</p>
-              </div>
-            </div>
-          </div>
-          <figcaption class="hero-route">
-            <span>Your laptop</span>
-            <span class="route-network">Wi‑Fi · SSH</span>
-            <span>Your Linux PC</span>
-          </figcaption>
-        </figure>
+        <div class="hero-demo" id="demo">
+          <figure class="session">
+            <video controls playsinline preload="none" poster="assets/demo-poster.webp" width="1920" height="1080" aria-label="Remote Dev product demo" aria-describedby="demo-caption">
+              <source src="assets/remote-dev-demo.mp4" type="video/mp4">
+              <p>Open the <a href="assets/remote-dev-demo.mp4">Remote Dev product demo</a>.</p>
+            </video>
+            <figcaption id="demo-caption">
+              <span>Remote Dev demo <span class="demo-duration">· 29 seconds</span></span>
+              <a href="assets/remote-dev-demo.mp4" download>Download video</a>
+            </figcaption>
+          </figure>
+          <details class="transcript">
+            <summary>Read the video description</summary>
+            <p>Dev servers and test runs can crowd a laptop. The film shows an unused Linux PC being switched on and connected. The developer runs <code>remote-dev up</code> from the laptop, then opens a sample app in its browser while the PC runs the app. Tests can run on Linux as configured Docker Compose jobs. The soundtrack is instrumental.</p>
+          </details>
+        </div>
       </div>
     </section>
 
-    <section class="proof" id="workflow" aria-labelledby="workflow-title">
+    <section class="workflow" id="workflow" aria-labelledby="workflow-title">
       <div class="wrap">
-        <div class="proof-copy">
-          <h2 id="workflow-title">Start on your laptop.<br>Run on Linux.</h2>
-          <p>Connect once to a Linux PC you can reach over SSH. From your project folder, run <code>remote-dev up</code> and open the address it prints in your browser.</p>
-        </div>
-        <figure class="session">
-          <video controls playsinline preload="none" poster="assets/demo-poster.webp" width="1920" height="1080" aria-label="Remote Dev launch demo" aria-describedby="demo-caption">
-            <source src="assets/remote-dev-demo.mp4" type="video/mp4">
-            <p>Open the <a href="assets/remote-dev-demo.mp4">Remote Dev launch demo</a>.</p>
-          </video>
-          <figcaption id="demo-caption">
-            <span>Remote Dev in 29 seconds</span>
-            <a href="assets/remote-dev-demo.mp4" download>Download video</a>
-          </figcaption>
-        </figure>
-        <details class="transcript">
-          <summary>Read the video description</summary>
-          <p>Dev servers and test runs can crowd a laptop. The film shows an unused Linux PC being switched on and connected. The developer runs <code>remote-dev up</code> from the laptop, then opens a sample app in its browser while the PC runs the app. Tests can run on Linux as configured Docker Compose jobs. The soundtrack is instrumental.</p>
-        </details>
+        <h2 id="workflow-title">How it works</h2>
         <dl class="flow">
-          <div><dt><code>remote-dev connect devbox</code></dt><dd>Check and remember your Linux server over SSH.</dd></div>
-          <div><dt><code>remote-dev up</code></dt><dd>Start your dev services from your Git worktree.</dd></div>
-          <div><dt>Open the local URL</dt><dd>Use your laptop browser. Saved changes sync to Linux.</dd></div>
+          <div>
+            <dt>Connect to your Linux PC</dt>
+            <dd>Reach it over SSH. Your laptop can use Wi‑Fi.</dd>
+          </div>
+          <div>
+            <dt>Start the app</dt>
+            <dd>Run <code>remote-dev up</code> from your project folder.</dd>
+          </div>
+          <div>
+            <dt>Open it in your browser</dt>
+            <dd>Use the address Remote Dev prints. Saved changes sync to Linux.</dd>
+          </div>
         </dl>
       </div>
     </section>
@@ -93,7 +80,7 @@
     <section class="install" id="install" aria-labelledby="install-title">
       <div class="wrap install-grid">
         <div>
-          <h2 id="install-title">Start with the repo you already have.</h2>
+          <h2 id="install-title">Install Remote Dev</h2>
           <p>Remote Dev supports Docker Compose, common Node development scripts, and a TOML file for custom start commands.</p>
           <p>Build the Go release candidate on macOS or Linux with Go 1.26 or newer, Git, and OpenSSH. Your Linux server needs Docker Engine and the Compose plugin.</p>
           <a class="text-link" href="https://github.com/Ross-cripto/remote-dev#quick-start">Read the setup guide</a>
@@ -117,7 +104,7 @@ export PATH="$HOME/.local/bin:$PATH"</code></pre>
   <footer class="site-footer">
     <div class="wrap footer-content">
       <a class="wordmark" href="./"><img src="assets/mark.svg" width="32" height="32" alt=""><span>Remote Dev</span></a>
-      <div><a href="https://github.com/Ross-cripto/remote-dev">Source on GitHub</a><a href="https://github.com/Ross-cripto/remote-dev/issues/new/choose">Give feedback</a></div>
+      <div><a href="https://github.com/Ross-cripto/remote-dev/blob/main/LICENSE">MIT license</a><a href="https://github.com/Ross-cripto/remote-dev">Source on GitHub</a><a href="https://github.com/Ross-cripto/remote-dev/issues/new/choose">Give feedback</a></div>
     </div>
   </footer>
 </body>
